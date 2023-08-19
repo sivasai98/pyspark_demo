@@ -28,8 +28,7 @@ class App(AbstractApp):
         self.spark.stop()
         print("spark session closed!!!")
 
-    def read_data(self):
-        read_write_handler = ReadWiteHandler(self.spark)
+    def read_data(self,read_write_handler):
         movies_df = read_write_handler.read_dat_files(self.movies_dat_file_path) \
             .withColumn(YEAR, f.regexp_extract(f.col(TITLE), "\\((\\d+)\\)", 1).cast(IntegerType()))
         rating_df = read_write_handler.read_dat_files(self.ratings_dat_file_path)

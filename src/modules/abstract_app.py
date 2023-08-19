@@ -1,13 +1,14 @@
 import abc
 
 from src.commons.property_reader import get_property
+from src.commons.spark_read_write_handler import ReadWiteHandler
 from src.constants.property_constants import SEC_COMMON, MOVIES_DAT_FILE_PATH, RATINGS_DAT_FILE_PATH, \
     USERS_DAT_FILE_PATH
 
 
 class AbstractApp(abc.ABC):
 
-    def __init__(self,env):
+    def __init__(self, env):
         self.env = env
 
     @property
@@ -22,7 +23,7 @@ class AbstractApp(abc.ABC):
     def users_dat_file_path(self):
         return get_property(SEC_COMMON, USERS_DAT_FILE_PATH)
 
-    def read_data(self):
+    def read_data(self, read_write_handler: ReadWiteHandler):
         pass
 
     def do(self):
