@@ -1,12 +1,9 @@
 from pyspark.sql import functions as f
 from pyspark.sql.types import IntegerType
-from src.commons.property_reader import get_property
 from src.commons.spark_commons import get_spark_session
 from src.commons.spark_read_write_handler import ReadWiteHandler
 from src.constants.constants import MOVIEID, TITLE, YEAR, RATING, PERCENTAGE, ONE, TWO, THREE, FOUR, FIVE, ONE_PERCENT, \
     TWO_PERCENT, THREE_PERCENT, FOUR_PERCENT, FIVE_PERCENT, COUNT, M, F, MALE, FEMALE, GENDER, TWO_FIFTY, USERID, CNT
-from src.constants.property_constants import SEC_COMMON, MOVIES_DAT_FILE_PATH, RATINGS_DAT_FILE_PATH, \
-    USERS_DAT_FILE_PATH
 from src.modules.abstract_app import AbstractApp
 
 
@@ -30,18 +27,6 @@ class App(AbstractApp):
         """ closing the spark context!"""
         self.spark.stop()
         print("spark session closed!!!")
-
-    @property
-    def movies_dat_file_path(self):
-        return get_property(SEC_COMMON, MOVIES_DAT_FILE_PATH)
-
-    @property
-    def ratings_dat_file_path(self):
-        return get_property(SEC_COMMON, RATINGS_DAT_FILE_PATH)
-
-    @property
-    def users_dat_file_path(self):
-        return get_property(SEC_COMMON, USERS_DAT_FILE_PATH)
 
     def read_data(self):
         read_write_handler = ReadWiteHandler(self.spark)
@@ -69,7 +54,7 @@ class App(AbstractApp):
             .withColumnRenamed(THREE, THREE_PERCENT) \
             .withColumnRenamed(FOUR, FOUR_PERCENT) \
             .withColumnRenamed(FIVE, FIVE_PERCENT)
-        movies_rating_df.show(5,False)
+        movies_rating_df.show(5, False)
 
         mean_ratings_pivot = data_df.repartition(f.col(MOVIEID)).groupBy(TITLE) \
             .pivot(GENDER).agg(f.round(f.mean(RATING), int(THREE)))
@@ -85,6 +70,6 @@ class App(AbstractApp):
         mean_ratings_df = mean_ratings_pivot.where(f.col(TITLE).isin(active_titles_list)) \
             .withColumnRenamed(F, FEMALE).withColumnRenamed(M, MALE)
 
-        mean_ratings_df.show(5,False)
+        mean_ratings_df.show(5, False)
         mean_ratings_pivot.unpersist()
         data_df.unpersist()
