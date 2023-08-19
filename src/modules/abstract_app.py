@@ -24,7 +24,16 @@ class AbstractApp(abc.ABC):
         return get_property(SEC_COMMON, USERS_DAT_FILE_PATH)
 
     def read_data(self, read_write_handler: ReadWiteHandler):
+        """
+        read dat files from HDFS
+        :param read_write_handler:
+        :return: Tuple of DataFrame
+        """
         pass
 
     def do(self):
+        """
+        Process Data and write to HDFS
+        :return: None
+        """
         pass
