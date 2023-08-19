@@ -1,1 +1,1 @@
-configparser
+pyspark==2.3
