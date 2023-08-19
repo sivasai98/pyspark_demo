@@ -4,7 +4,7 @@ from src.commons.property_reader import get_property
 from src.commons.spark_commons import get_spark_session
 from src.commons.spark_read_write_handler import ReadWiteHandler
 from src.constants.constants import MOVIEID, TITLE, YEAR, RATING, PERCENTAGE, ONE, TWO, THREE, FOUR, FIVE, ONE_PERCENT, \
-    TWO_PERCENT, THREE_PERCENT, FOUR_PERCENT, FIVE_PERCENT, COUNT, M, F, MALE, FEMALE, GENDER, TWO_FIFTY, USERID
+    TWO_PERCENT, THREE_PERCENT, FOUR_PERCENT, FIVE_PERCENT, COUNT, M, F, MALE, FEMALE, GENDER, TWO_FIFTY, USERID, CNT
 from src.constants.property_constants import SEC_COMMON, MOVIES_DAT_FILE_PATH, RATINGS_DAT_FILE_PATH, \
     USERS_DAT_FILE_PATH
 from src.modules.abstract_app import AbstractApp
@@ -52,12 +52,15 @@ class App(AbstractApp):
         return movies_df, rating_df, users_df
 
     def do(self):
-        movies_df, ratings_df, users_df = self.read_data()
+        read_write_handler = ReadWiteHandler(self.spark)
+        movies_df, ratings_df, users_df = self.read_data(read_write_handler)
+
         data_df = ratings_df.join(users_df, USERID).join(movies_df, MOVIEID)
+
         data_df.persist()
 
         movies_rating_df = data_df.repartition(f.col(MOVIEID)).groupBy(TITLE, RATING).agg(
-            f.count(RATING).alias("cnt")) \
+            f.count(RATING).alias(CNT)) \
             .selectExpr(TITLE, RATING, "round((cnt / (sum(cnt) over(partition by title)))*100,3) as percentage") \
             .groupBy(TITLE).pivot(RATING).agg(f.max(PERCENTAGE)) \
             .na.fill(0) \
@@ -67,12 +70,18 @@ class App(AbstractApp):
             .withColumnRenamed(FOUR, FOUR_PERCENT) \
             .withColumnRenamed(FIVE, FIVE_PERCENT)
         movies_rating_df.show(5,False)
+
         mean_ratings_pivot = data_df.repartition(f.col(MOVIEID)).groupBy(TITLE) \
             .pivot(GENDER).agg(f.round(f.mean(RATING), int(THREE)))
+
         mean_ratings_pivot.persist()
+
         ratings_by_title_df = data_df.groupBy(TITLE).count()
+
         active_titles_df = ratings_by_title_df.where(f.col(COUNT) >= TWO_FIFTY)
+
         active_titles_list = [row.title for row in active_titles_df.select(TITLE).collect()]
+
         mean_ratings_df = mean_ratings_pivot.where(f.col(TITLE).isin(active_titles_list)) \
             .withColumnRenamed(F, FEMALE).withColumnRenamed(M, MALE)
 
