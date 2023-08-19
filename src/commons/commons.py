@@ -12,7 +12,7 @@ def sys_error(error_code, exit_fl=True):
     :return:
     """
     if exit_fl:
-        log.error(f"Error code:{error_code} Exiting!...")
+        log.error(f"Error code:{error_code} Exiting!..")
         sys.exit(error_code)
     else:
         return None
